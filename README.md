@@ -1,43 +1,84 @@
-# mobile
+# Rewardz Mobile
 
-This is an [Expo](https://expo.dev) project pre-configured with [Uniwind](https://uniwind.dev/) for styling and Solana libraries.
+Solana-based reward infrastructure mobile app. Discover rewarded on-chain actions, earn points, and mint Token X.
 
-## Technologies
+## Stack
 
-- [Expo](https://expo.dev)
-- [Uniwind](https://uniwind.dev/) (Tailwind CSS for React Native)
-- [@solana/kit](https://github.com/solana-labs/solana-web3.js)
-- [@wallet-ui/react-native-kit](https://github.com/wallet-ui/wallet-ui)
+- **Expo 55** / React Native 0.83 / React 19
+- **@solana/kit** v6 — Solana client (no web3.js)
+- **@wallet-ui/react-native-kit** — Mobile Wallet Adapter 2.0
+- **Expo Router** — file-based navigation
+- **Uniwind** — Tailwind CSS for React Native
+- **Zustand** — wallet & app state
+- **TanStack React Query** — server state
+- **@solana-program/token** — SPL token operations
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-This steps builds the dependencies for the development client.
+## Setup
 
 ```bash
-npm run android
+pnpm install
+cp .env.example .env   # edit with your devnet config
 ```
 
-In the output, you'll find options to open the app in a:
+## Run
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+```bash
+npx expo prebuild --platform android --clean # prebuild
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+pnpm run android         # build + run on Android device/emulator
+pnpm run dev             # Expo dev server
+```
 
-## Learn more
+## Scripts
 
-To learn more about developing your project with Expo, look at the following resources:
+| Command             | Description                      |
+| ------------------- | -------------------------------- |
+| `pnpm run android`   | Build and run Android            |
+| `pnpm run dev`       | Expo dev server with cache reset |
+| `pnpm run typecheck` | TypeScript type checking         |
+| `pnpm run lint`      | ESLint with auto-fix             |
+| `pnpm run format`    | Prettier format                  |
+| `pnpm run ci`        | Type-check + lint + format check |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Uniwind documentation](https://uniwind.dev/): Learn how to style your app with Tailwind CSS.
-- [Solana documentation](https://solana.com/docs): Learn how to build on Solana.
+## Project Structure
+
+```
+src/
+├── app/              # Expo Router screens (file-based routing)
+│   ├── (auth)/       # Onboarding flow (welcome, connect, unlock, success)
+│   ├── (tabs)/       # Main app (Home, Explore, Rewards, Profile)
+│   │   ├── home/     # Intent search → results → offer → blink → tx flow
+│   │   ├── explore/  # Categories, missions
+│   │   ├── rewards/  # Points, history, mining teaser
+│   │   └── profile/  # Wallet, stake, settings
+│   ├── locked.tsx    # Teaser mode (no X stake)
+│   └── error.tsx     # Error/offline
+├── components/       # Shared UI components
+├── config/           # Environment, Solana cluster, constants
+├── hooks/            # useWallet, useAppState, useRewardzClient
+├── services/         # Wallet adapter, API client
+├── store/            # Zustand stores (wallet, app state)
+├── types/            # Navigation params, API types
+├── utils/            # Address formatting, PDA derivation, storage
+└── providers/        # React Query provider
+```
+
+## Environment Variables
+
+See `.env.example` for all required variables. Key ones:
+
+- `SOLANA_CLUSTER` — `devnet` | `staging` | `mainnet-beta`
+- `RPC_URL` — Solana RPC endpoint
+- `REWARDZ_PROGRAM_ID` — on-chain program address
+- `INTENT_API_BASE_URL` — backend API URL
+
+## Architecture Notes
+
+- Uses `@solana/kit` exclusively — no `@solana/web3.js` dependency
+- Wallet session persistence handled by `@wallet-ui/react-native-kit` via AsyncStorage
+- `@dialectlabs/blinks` deferred to TODO-0012 (requires web3.js peer dep evaluation)
+- API client is a thin HTTP layer until `@rewardz/sdk` upgrades to kit v6
+
+## Distribution
+
+Android via Solana dApp Store. See [publishing docs](https://docs.solanamobile.com/dapp-publishing/overview).

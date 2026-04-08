@@ -1,15 +1,22 @@
 import '../global.css'
 
 import { Slot } from 'expo-router'
-import { AppIdentity, createSolanaDevnet, MobileWalletProvider } from '@wallet-ui/react-native-kit'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { MobileWalletProvider } from '@wallet-ui/react-native-kit'
+import { QueryProvider } from '@/providers/QueryProvider'
+import { getCluster, getAppIdentity } from '@/config/solana'
 
-const cluster = createSolanaDevnet()
-const identity: AppIdentity = { name: 'Kit Expo Uniwind' }
+const cluster = getCluster()
+const identity = getAppIdentity()
 
-export default function Layout() {
+export default function RootLayout() {
   return (
-    <MobileWalletProvider cluster={cluster} identity={identity}>
-      <Slot />
-    </MobileWalletProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <MobileWalletProvider cluster={cluster} identity={identity}>
+        <QueryProvider>
+          <Slot />
+        </QueryProvider>
+      </MobileWalletProvider>
+    </GestureHandlerRootView>
   )
 }
