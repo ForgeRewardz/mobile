@@ -1,0 +1,1 @@
+export { WalletIdentityChip } from './WalletIdentityChip'
