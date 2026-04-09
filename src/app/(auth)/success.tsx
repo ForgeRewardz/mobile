@@ -2,6 +2,7 @@ import { View, Text, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useAppStore } from '@/store'
 import { SafeScreen } from '@/components/layout/SafeScreen'
+import { colors, typography, radii } from '@/theme/tokens'
 
 export default function SuccessScreen() {
   const router = useRouter()
@@ -16,16 +17,48 @@ export default function SuccessScreen() {
   return (
     <SafeScreen>
       <View className="flex-1 items-center justify-center px-8">
-        <Text className="text-5xl mb-6">✓</Text>
-        <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-4">You're In!</Text>
-        <Text className="text-base text-gray-500 dark:text-gray-400 text-center mb-8">
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: radii.full,
+            backgroundColor: `${colors.primary}1a`,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 24,
+          }}
+        >
+          <Text style={{ fontSize: 32, color: colors.primary }}>✓</Text>
+        </View>
+        <Text className="text-3xl text-on-surface mb-4" style={{ fontFamily: typography.headlineFont }}>
+          You're all set!
+        </Text>
+        <Text
+          className="text-base text-on-surface-variant text-center mb-8"
+          style={{ fontFamily: typography.bodyFont }}
+        >
           Your stake is active. You now have full access to discover offers, earn points, and mint Token X.
         </Text>
-        <Pressable
-          onPress={handleContinue}
-          className="bg-indigo-500 px-8 py-4 rounded-2xl active:bg-indigo-600 w-full items-center"
-        >
-          <Text className="text-white font-bold text-lg">Start Exploring</Text>
+        <Pressable onPress={handleContinue} className="w-full active:opacity-80">
+          <View
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: radii.full,
+              paddingVertical: 16,
+              paddingHorizontal: 32,
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              className="text-lg"
+              style={{
+                fontFamily: typography.buttonFont,
+                color: colors.surface,
+              }}
+            >
+              Continue
+            </Text>
+          </View>
         </Pressable>
       </View>
     </SafeScreen>

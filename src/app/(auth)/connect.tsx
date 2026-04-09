@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router'
 import { useWallet } from '@/hooks/useWallet'
 import { useWalletStore } from '@/store'
 import { SafeScreen } from '@/components/layout/SafeScreen'
+import { colors, typography, radii } from '@/theme/tokens'
 
 export default function ConnectScreen() {
   const router = useRouter()
@@ -21,21 +22,45 @@ export default function ConnectScreen() {
   return (
     <SafeScreen>
       <View className="flex-1 items-center justify-center px-8">
-        <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Connect Wallet</Text>
-        <Text className="text-base text-gray-500 dark:text-gray-400 text-center mb-8">
+        <Text className="text-3xl text-on-surface mb-4" style={{ fontFamily: typography.headlineFont }}>
+          Connect Wallet
+        </Text>
+        <Text
+          className="text-base text-on-surface-variant text-center mb-8"
+          style={{ fontFamily: typography.bodyFont }}
+        >
           Connect your Solana wallet to access Rewardz. We use Mobile Wallet Adapter for secure signing.
         </Text>
-        {error && <Text className="text-red-500 text-sm text-center mb-4">{error}</Text>}
-        <Pressable
-          onPress={handleConnect}
-          disabled={isConnecting}
-          className="bg-indigo-500 px-8 py-4 rounded-2xl active:bg-indigo-600 w-full items-center"
-        >
-          {isConnecting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-white font-bold text-lg">Connect Wallet</Text>
-          )}
+        {error && (
+          <Text className="text-sm text-error text-center mb-4" style={{ fontFamily: typography.bodyFont }}>
+            {error}
+          </Text>
+        )}
+        <Pressable onPress={handleConnect} disabled={isConnecting} className="w-full active:opacity-80">
+          <View
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: radii.full,
+              paddingVertical: 16,
+              paddingHorizontal: 32,
+              alignItems: 'center',
+              opacity: isConnecting ? 0.7 : 1,
+            }}
+          >
+            {isConnecting ? (
+              <ActivityIndicator color={colors.surface} />
+            ) : (
+              <Text
+                className="text-lg"
+                style={{
+                  fontFamily: typography.buttonFont,
+                  color: colors.surface,
+                }}
+              >
+                Connect Wallet
+              </Text>
+            )}
+          </View>
         </Pressable>
       </View>
     </SafeScreen>
