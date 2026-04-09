@@ -1,18 +1,25 @@
 import { useMemo } from 'react'
 import { useWallet } from './useWallet'
 import { createWalletAdapter } from '@/services/wallet-service'
-import { RewardzApiClient } from '@/services/api-client'
+import { RewardzClient } from '@rewardz/sdk/client'
+import { ENV } from '@/config/env'
 
 /**
- * Returns a memoized RewardzApiClient instance bound to the current wallet.
- * Returns null if no wallet is connected.
+ * Returns a memoized RewardzClient instance from @rewardz/sdk bound to the
+ * current wallet. Returns null if no wallet is connected.
+ *
+ * This replaces the inline RewardzApiClient with the real SDK.
  */
-export function useRewardzClient(): RewardzApiClient | null {
+export function useRewardzClient(): RewardzClient | null {
   const { publicKey, signMessage } = useWallet()
 
   return useMemo(() => {
     if (!publicKey || !signMessage) return null
     const adapter = createWalletAdapter(publicKey, (msg: Uint8Array) => signMessage(msg) as Promise<Uint8Array>)
-    return new RewardzApiClient({ wallet: adapter })
+    return new RewardzClient({
+      rpcUrl: ENV.RPC_URL,
+      apiBaseUrl: ENV.INTENT_API_BASE_URL,
+      wallet: adapter,
+    })
   }, [publicKey, signMessage])
 }
