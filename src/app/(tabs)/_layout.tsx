@@ -1,6 +1,37 @@
 import { Tabs, Redirect } from 'expo-router'
+import { View } from 'react-native'
 import { useMobileWallet } from '@wallet-ui/react-native-kit'
 import { TabBarIcon } from '@/components/layout/TabBarIcon'
+import { usePointsBalance } from '@/hooks/use-points-balance'
+import { colors } from '@/theme/tokens'
+
+/**
+ * Tab icon wrapper with a pending-points notification dot.
+ * Shown on the Rewards tab when the user has pending points.
+ */
+function RewardsTabIcon({ focused }: { focused: boolean }) {
+  const { data: balance } = usePointsBalance()
+  const hasPending = (balance?.pending ?? 0) > 0
+
+  return (
+    <View style={{ position: 'relative' }}>
+      <TabBarIcon name="rewards" focused={focused} />
+      {hasPending ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: colors.pending,
+          }}
+        />
+      ) : null}
+    </View>
+  )
+}
 
 export default function TabLayout() {
   const { account } = useMobileWallet()
@@ -14,9 +45,14 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: { borderTopColor: '#e5e7eb' },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.onSurfaceVariant,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
       }}
     >
       <Tabs.Screen
@@ -37,7 +73,7 @@ export default function TabLayout() {
         name="rewards"
         options={{
           title: 'Rewards',
-          tabBarIcon: ({ focused }) => <TabBarIcon name="rewards" focused={focused} />,
+          tabBarIcon: ({ focused }) => <RewardsTabIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
