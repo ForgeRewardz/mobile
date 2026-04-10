@@ -5,8 +5,8 @@ import type { CompletionInit } from '@/types/api'
 /**
  * Initialises a completion record before executing a Blink.
  *
- * Returns completionId + expectedReference which are used to track the
- * completion through the verification pipeline.
+ * Maps SDK InitCompletionResponse { completion_id, expected_reference, ... }
+ * to mobile CompletionInit type.
  */
 export function useCompletionInit(): UseMutationResult<CompletionInit, Error, string> {
   const client = useRewardzClient()
@@ -15,10 +15,9 @@ export function useCompletionInit(): UseMutationResult<CompletionInit, Error, st
     mutationFn: async (offerId: string) => {
       if (!client) throw new Error('Wallet not connected')
       const raw = await client.initCompletion(offerId)
-      const r = raw as unknown as Record<string, unknown>
       return {
-        completionId: String(r.completionId ?? r.completion_id ?? ''),
-        expectedReference: String(r.expectedReference ?? r.expected_reference ?? ''),
+        completionId: raw.completion_id,
+        expectedReference: raw.expected_reference,
         status: 'awaiting_signature',
       }
     },

@@ -6,10 +6,26 @@ import { useRewardzClient } from './useRewardzClient'
 import type { UserBalance } from '@/types/api'
 
 /**
+ * Parse a stringified bigint-ish value to a JS number.
+ * SDK returns points amounts as strings to preserve precision; the mobile
+ * UI only needs JS-number precision.
+ */
+function parseAmount(value: string | number | null | undefined): number {
+  if (value == null) return 0
+  if (typeof value === 'number') return value
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+/**
  * Reads the points balance for the connected wallet via @rewardz/sdk.
  *
+ * Maps the SDK's snake_case response shape (PointsBalanceResponse) to the
+ * mobile UserBalance type. Amounts are stored as strings in the SDK response
+ * (bigint precision) and parsed to numbers here for display.
+ *
  * Uses stale-while-revalidate: 60s stale time + 30s background refetch.
- * Also refetches when the app returns from background via AppState listener.
+ * Also refetches when the app returns from background.
  */
 export function usePointsBalance(): UseQueryResult<UserBalance> {
   const { publicKey } = useWallet()
@@ -33,14 +49,13 @@ export function usePointsBalance(): UseQueryResult<UserBalance> {
         throw new Error('Wallet not connected')
       }
       const raw = await client.getPointsBalance(publicKey.toString())
-      // Map SDK response to mobile UserBalance type
+      // SDK shape: PointsBalanceResponse { total_earned, total_pending, usable_balance, ... }
       return {
-        walletAddress: publicKey.toString(),
-        totalEarned: (raw as { totalEarned?: number }).totalEarned ?? 0,
-        pending: (raw as { pending?: number }).pending ?? 0,
-        usable: (raw as { usable?: number }).usable ?? 0,
-        reserved: (raw as { reserved?: number }).reserved ?? 0,
-        rank: (raw as { rank?: number }).rank,
+        walletAddress: raw.wallet_address ?? publicKey.toString(),
+        totalEarned: parseAmount(raw.total_earned),
+        pending: parseAmount(raw.total_pending),
+        usable: parseAmount(raw.usable_balance),
+        reserved: parseAmount(raw.total_reserved),
       }
     },
     enabled: !!client && !!publicKey,

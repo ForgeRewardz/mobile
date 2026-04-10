@@ -10,8 +10,8 @@ interface UseFeaturedOffersOptions {
 /**
  * Fetches featured/trending offers from @rewardz/sdk.
  *
- * Uses browseOffers with featured filter. 5-minute stale time since
- * featured offers don't change frequently.
+ * Maps OffersBrowseResponse.offers (OfferRow[], snake_case) to mobile IntentOffer.
+ * Uses 5-minute stale time since featured offers don't change frequently.
  */
 export function useFeaturedOffers(options: UseFeaturedOffersOptions = {}): UseQueryResult<IntentOffer[]> {
   const { actionType, limit = 10 } = options
@@ -24,22 +24,21 @@ export function useFeaturedOffers(options: UseFeaturedOffersOptions = {}): UseQu
       const filters: Record<string, string> = { sort: 'score', limit: String(limit) }
       if (actionType) filters.actionType = actionType
       const response = await client.browseOffers(filters)
-      const raw =
-        (response as { offers?: unknown[]; data?: unknown[] }).offers ?? (response as { data?: unknown[] }).data ?? []
-      return (raw as Record<string, unknown>[]).map(
+      // SDK shape: OffersBrowseResponse { offers: OfferRow[] }
+      const rawOffers = response.offers ?? []
+      return rawOffers.map(
         (o, idx): IntentOffer => ({
-          id: String(o.id ?? ''),
-          protocolName: String(o.protocolName ?? 'Unknown'),
-          protocolIcon: o.protocolIcon as string | undefined,
-          actionType: String(o.actionType ?? ''),
-          title: String(o.title ?? ''),
-          description: String(o.description ?? ''),
-          iconUrl: String(o.iconUrl ?? ''),
-          actionUrl: String(o.actionUrl ?? ''),
-          rewardPoints: Number(o.rewardPoints ?? 0),
-          eligibility: (o.eligibility ?? 'unknown') as IntentOffer['eligibility'],
-          trustScore: o.trustScore as number | undefined,
-          rank: Number(o.rank ?? idx),
+          id: o.campaign_id,
+          protocolName: o.protocol_name,
+          actionType: o.action_type,
+          title: o.name,
+          description: o.description ?? '',
+          iconUrl: '', // OfferRow does not include icon URL — empty for now
+          actionUrl: '', // Action URL is looked up from protocol manifest, not offer row
+          rewardPoints: o.points_per_completion,
+          eligibility: 'unknown',
+          trustScore: o.trust_score,
+          rank: o.rank ?? idx,
         }),
       )
     },

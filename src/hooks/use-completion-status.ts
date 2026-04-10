@@ -4,11 +4,24 @@ import type { Completion, CompletionStatus } from '@/types/api'
 
 const TERMINAL_STATES: CompletionStatus[] = ['awarded', 'confirmed_not_eligible', 'rejected', 'expired']
 
+function normaliseStatus(status: string): CompletionStatus {
+  const valid: CompletionStatus[] = [
+    'awaiting_signature',
+    'awaiting_chain_verification',
+    'awarded',
+    'confirmed_not_eligible',
+    'rejected',
+    'expired',
+  ]
+  return (valid.find((s) => s === status) ?? 'awaiting_signature') as CompletionStatus
+}
+
 /**
  * Polls completion status from the REWARDZ API.
  *
+ * Maps SDK CompletionResponse (snake_case) → mobile Completion type.
  * Starts at 3-second intervals, backs off to 10s after 10 polls,
- * stops on terminal states (awarded, confirmed_not_eligible, rejected, expired).
+ * stops on terminal states.
  */
 export function useCompletionStatus(completionId: string | null): UseQueryResult<Completion> {
   const client = useRewardzClient()
@@ -20,18 +33,17 @@ export function useCompletionStatus(completionId: string | null): UseQueryResult
         throw new Error('No completion or client')
       }
       const raw = await client.getCompletionStatus(completionId)
-      const r = raw as unknown as Record<string, unknown>
       return {
-        id: String(r.id ?? completionId),
-        offerId: String(r.offerId ?? ''),
-        walletAddress: String(r.walletAddress ?? r.userWallet ?? ''),
-        status: (r.status as CompletionStatus) ?? 'awaiting_signature',
-        signature: (r.signature as string) ?? null,
-        expectedReference: (r.expectedReference ?? r.expected_reference ?? null) as string | null,
-        pointsAwarded: (r.pointsAwarded ?? r.points ?? null) as number | null,
-        reason: (r.reason ?? null) as string | null,
-        createdAt: String(r.createdAt ?? new Date().toISOString()),
-        updatedAt: String(r.updatedAt ?? new Date().toISOString()),
+        id: raw.id,
+        offerId: raw.reward_policy_id ?? '',
+        walletAddress: raw.user_wallet,
+        status: normaliseStatus(raw.status),
+        signature: raw.signature,
+        expectedReference: raw.expected_reference,
+        pointsAwarded: raw.points_awarded,
+        reason: raw.rejection_reason,
+        createdAt: raw.created_at,
+        updatedAt: raw.verified_at ?? raw.created_at,
       }
     },
     enabled: !!client && !!completionId,
@@ -40,7 +52,6 @@ export function useCompletionStatus(completionId: string | null): UseQueryResult
       if (data && TERMINAL_STATES.includes(data.status)) {
         return false
       }
-      // Back off to 10s after 10 polls
       const pollCount = query.state.dataUpdateCount ?? 0
       return pollCount > 10 ? 10_000 : 3_000
     },

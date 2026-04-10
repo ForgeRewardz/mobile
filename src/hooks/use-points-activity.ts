@@ -13,10 +13,27 @@ interface UsePointsActivityOptions {
   pageSize?: number
 }
 
+function parseAmount(value: string | number | null | undefined): number {
+  if (value == null) return 0
+  if (typeof value === 'number') return value
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function normaliseEventType(type: string): PointEventType {
+  const lower = type.toLowerCase()
+  if (lower === 'awarded' || lower === 'award') return 'awarded'
+  if (lower === 'pending') return 'pending'
+  if (lower === 'rejected') return 'rejected'
+  if (lower === 'reserved') return 'reserved'
+  return 'awarded'
+}
+
 /**
  * Paginated points activity list (infinite query).
  *
- * Supports optional status filter: all | awarded | pending | rejected | reserved.
+ * Maps SDK PointEventRow[] (snake_case, stringified amounts) to the mobile
+ * PointEvent type. Supports status filter: all | awarded | pending | rejected | reserved.
  */
 export function usePointsActivity(options: UsePointsActivityOptions = {}) {
   const { status = 'all', pageSize = 20 } = options
@@ -32,25 +49,26 @@ export function usePointsActivity(options: UsePointsActivityOptions = {}) {
       const page = (pageParam as number) ?? 0
       const offset = page * pageSize
       const response = await client.getRewardHistory({ limit: pageSize, offset })
-      // Map SDK response shape to mobile PointEvent[]
-      const rawEvents =
-        (response as { events?: unknown[]; data?: unknown[] }).events ?? (response as { data?: unknown[] }).data ?? []
-      const events: PointEvent[] = (rawEvents as Record<string, unknown>[])
-        .map((e) => ({
-          id: String(e.id ?? ''),
-          walletAddress: String(e.walletAddress ?? publicKey.toString()),
-          amount: Number(e.amount ?? 0),
-          type: (e.type ?? 'awarded') as PointEventType,
-          protocolId: e.protocolId as string | undefined,
-          protocolName: e.protocolName as string | undefined,
-          reason: e.reason as string | undefined,
-          completionId: (e.completionId ?? null) as string | null,
-          sourceSignature: e.sourceSignature as string | undefined,
-          createdAt: String(e.createdAt ?? new Date().toISOString()),
-        }))
+      // SDK shape: PointsHistoryResponse { events: PointEventRow[] }
+      const rawEvents = response.events ?? []
+      const events: PointEvent[] = rawEvents
+        .map(
+          (e): PointEvent => ({
+            id: e.id,
+            walletAddress: e.user_wallet,
+            amount: parseAmount(e.amount),
+            type: normaliseEventType(e.type),
+            protocolId: e.protocol_id ?? undefined,
+            protocolName: undefined, // SDK doesn't include protocol_name in point events
+            reason: e.reason ?? undefined,
+            completionId: e.completion_id,
+            sourceSignature: e.source_signature ?? undefined,
+            createdAt: e.created_at,
+          }),
+        )
         .filter((e) => status === 'all' || e.type === status)
 
-      const hasMore = events.length === pageSize
+      const hasMore = rawEvents.length === pageSize
       return {
         events,
         nextPage: hasMore ? page + 1 : null,
