@@ -1,4 +1,5 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, type UseMutationResult } from '@tanstack/react-query'
+import { useWallet } from './useWallet'
 import { useRewardzClient } from './useRewardzClient'
 import type { TweetSubmission } from '@/types/api'
 
@@ -8,30 +9,20 @@ interface SubmitTweetParams {
 }
 
 /**
- * Submit a tweet for verification + reward evaluation.
+ * Mutation hook for submitting a tweet URL for reward verification.
  *
- * The on-chain SDK currently does not expose a typed `tweets.submit` method,
- * so we probe the client at runtime via a structural cast. When the SDK ships
- * a first-class tweet integration the cast can be removed in favour of the
- * generated client call.
+ * Uses the real @rewardz/sdk TweetClient (client.tweets.submit).
  */
-export function useSubmitTweet() {
+export function useSubmitTweet(): UseMutationResult<TweetSubmission, Error, SubmitTweetParams> {
+  const { publicKey } = useWallet()
   const client = useRewardzClient()
 
   return useMutation<TweetSubmission, Error, SubmitTweetParams>({
     mutationFn: async ({ tweetUrl, protocolId }) => {
       if (!client) throw new Error('Wallet not connected')
-      // Access tweet integration via SDK
-      const sdk = client as unknown as {
-        tweets?: {
-          submit: (url: string, wallet: string, protocolId?: string) => Promise<unknown>
-        }
-      }
-      if (!sdk.tweets?.submit) {
-        throw new Error('Tweet submission not yet supported by SDK')
-      }
-      const raw = await sdk.tweets.submit(tweetUrl, '', protocolId)
-      return raw as TweetSubmission
+      if (!publicKey) throw new Error('Wallet address unavailable')
+      const raw = await client.tweets.submit(tweetUrl, publicKey.toString(), protocolId)
+      return raw as unknown as TweetSubmission
     },
   })
 }

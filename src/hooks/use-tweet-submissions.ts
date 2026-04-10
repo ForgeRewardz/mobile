@@ -3,28 +3,37 @@ import { useWallet } from './useWallet'
 import { useRewardzClient } from './useRewardzClient'
 import type { TweetSubmission } from '@/types/api'
 
+interface TweetSubmissionsPage {
+  submissions: TweetSubmission[]
+  nextPage: number | null
+}
+
+/**
+ * Paginated tweet submissions for the connected wallet.
+ *
+ * Uses @rewardz/sdk TweetClient.listSubmissions which returns
+ * PaginatedResponse<TweetSubmission> with { data, total, page, pageSize, hasMore }.
+ */
 export function useTweetSubmissions() {
   const { publicKey } = useWallet()
   const client = useRewardzClient()
 
-  return useInfiniteQuery<{ submissions: TweetSubmission[]; nextPage: number | null }>({
+  return useInfiniteQuery<TweetSubmissionsPage>({
     queryKey: ['tweet-submissions', publicKey?.toString()],
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }): Promise<TweetSubmissionsPage> => {
       if (!client || !publicKey) throw new Error('Wallet not connected')
-      const sdk = client as unknown as {
-        tweets?: {
-          listSubmissions: (wallet: string, options?: { limit?: number; offset?: number }) => Promise<unknown>
-        }
-      }
-      if (!sdk.tweets?.listSubmissions) {
-        return { submissions: [], nextPage: null }
-      }
       const page = (pageParam as number) ?? 0
-      const raw = await sdk.tweets.listSubmissions(publicKey.toString(), { limit: 20, offset: page * 20 })
-      const data = raw as { submissions?: TweetSubmission[]; hasMore?: boolean }
+      const raw = await client.tweets.listSubmissions(publicKey.toString(), {
+        limit: 20,
+        page: page + 1, // SDK uses 1-indexed pages
+      })
+      const response = raw as unknown as {
+        data?: TweetSubmission[]
+        hasMore?: boolean
+      }
       return {
-        submissions: data.submissions ?? [],
-        nextPage: data.hasMore ? page + 1 : null,
+        submissions: response.data ?? [],
+        nextPage: response.hasMore ? page + 1 : null,
       }
     },
     initialPageParam: 0,

@@ -1,33 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useRewardzClient } from './useRewardzClient'
 import type { TweetRule } from '@/types/api'
 
 /**
- * Fetch the active tweet reward rules for a given protocol (or all protocols
- * when no id is supplied).
+ * Fetch active tweet reward rules for a given protocol (or all protocols).
  *
- * As with `useSubmitTweet`, the SDK does not yet expose a typed surface for
- * tweet rules so we probe the client at runtime. Returns an empty list when
- * the SDK cannot service the query — the UI treats this as a graceful
- * degradation rather than an error state.
+ * Uses @rewardz/sdk TweetClient.listRules. Maps SDK TweetVerificationRule
+ * (snake_case) to mobile TweetRule (camelCase).
  */
-export function useTweetRules(protocolId?: string) {
+export function useTweetRules(protocolId?: string): UseQueryResult<TweetRule[]> {
   const client = useRewardzClient()
 
   return useQuery<TweetRule[]>({
     queryKey: ['tweet-rules', protocolId ?? 'all'],
-    queryFn: async () => {
+    queryFn: async (): Promise<TweetRule[]> => {
       if (!client) throw new Error('Wallet not connected')
-      const sdk = client as unknown as {
-        tweets?: {
-          listRules: (protocolId?: string) => Promise<unknown>
+      const raw = await client.tweets.listRules(protocolId)
+      // SDK returns TweetVerificationRule[] — map to mobile TweetRule
+      return (raw as unknown as Record<string, unknown>[]).map((r): TweetRule => {
+        return {
+          id: String(r.id ?? ''),
+          protocolId: String(r.protocol_id ?? r.protocolId ?? ''),
+          protocolName: String(r.protocol_name ?? r.protocolName ?? ''),
+          requiredHashtags: (r.required_hashtags ?? r.hashtags ?? []) as string[],
+          requiredMentions: (r.required_mentions ?? r.mentions ?? []) as string[],
+          baseReward: Number(r.base_points ?? r.basePoints ?? 0),
+          description: String(r.description ?? ''),
+          isActive: Boolean(r.active ?? r.is_active ?? true),
         }
-      }
-      if (!sdk.tweets?.listRules) {
-        return []
-      }
-      const raw = await sdk.tweets.listRules(protocolId)
-      return (raw as TweetRule[]) ?? []
+      })
     },
     enabled: !!client,
     staleTime: 5 * 60_000,

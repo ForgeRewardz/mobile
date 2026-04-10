@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useWallet } from './useWallet'
 
-export type TxStatus = 'processing' | 'confirmed' | 'finalized' | 'failed' | 'expired'
+export type TxStatus = 'processing' | 'confirmed' | 'finalized' | 'failed' | 'expired' | 'rpc_unavailable'
 
 interface TransactionStatusResult {
   status: TxStatus
@@ -10,12 +10,19 @@ interface TransactionStatusResult {
   error?: string
 }
 
+interface RpcClient {
+  rpc?: {
+    getSignatureStatuses?: (sigs: unknown[]) => { send: () => Promise<unknown> }
+  }
+}
+
 /**
  * Polls transaction status via RPC every 2 seconds.
  *
  * Stops polling on terminal states (confirmed, finalized, failed, expired).
- * Warns after 60 seconds ("slow confirmation"). Uses @solana/kit RPC client
- * from useWallet.
+ * Returns rpc_unavailable when the RPC client cannot be reached so the UI
+ * can surface an error instead of spinning forever. Errors from the RPC
+ * call propagate via React Query's retry mechanism (3 retries with backoff).
  */
 export function useTransactionStatus(signature: string | null): UseQueryResult<TransactionStatusResult> {
   const { client } = useWallet()
@@ -28,54 +35,49 @@ export function useTransactionStatus(signature: string | null): UseQueryResult<T
       }
 
       // @solana/kit RPC pattern: client.rpc.getSignatureStatuses([sig]).send()
-      // Cast via unknown to accept the loosely-typed @wallet-ui/@solana/kit client shape
-      const rpc = (
-        client as unknown as { rpc?: { getSignatureStatuses?: (sigs: unknown[]) => { send: () => Promise<unknown> } } }
-      ).rpc
+      const rpc = (client as unknown as RpcClient).rpc
       if (!rpc?.getSignatureStatuses) {
-        // RPC unavailable — return processing so the poll keeps spinning
+        // RPC method unavailable — report explicitly so UI can show error
+        return { status: 'rpc_unavailable', signature, error: 'RPC client unavailable' }
+      }
+
+      const response = (await rpc.getSignatureStatuses([signature as unknown]).send()) as {
+        value?: ({
+          slot?: number
+          err?: unknown
+          confirmationStatus?: string
+        } | null)[]
+      }
+
+      const entry = response.value?.[0]
+      if (!entry) {
         return { status: 'processing', signature }
       }
 
-      try {
-        const response = (await rpc.getSignatureStatuses([signature as unknown]).send()) as {
-          value?: ({
-            slot?: number
-            err?: unknown
-            confirmationStatus?: string
-          } | null)[]
+      if (entry.err) {
+        return {
+          status: 'failed',
+          signature,
+          error: typeof entry.err === 'string' ? entry.err : 'Transaction failed',
         }
-
-        const entry = response.value?.[0]
-        if (!entry) {
-          return { status: 'processing', signature }
-        }
-
-        if (entry.err) {
-          return {
-            status: 'failed',
-            signature,
-            error: typeof entry.err === 'string' ? entry.err : 'Transaction failed',
-          }
-        }
-
-        const confirmStatus = entry.confirmationStatus
-        if (confirmStatus === 'finalized') {
-          return { status: 'finalized', signature, slot: entry.slot }
-        }
-        if (confirmStatus === 'confirmed') {
-          return { status: 'confirmed', signature, slot: entry.slot }
-        }
-        return { status: 'processing', signature, slot: entry.slot }
-      } catch {
-        return { status: 'processing', signature }
       }
+
+      const confirmStatus = entry.confirmationStatus
+      if (confirmStatus === 'finalized') {
+        return { status: 'finalized', signature, slot: entry.slot }
+      }
+      if (confirmStatus === 'confirmed') {
+        return { status: 'confirmed', signature, slot: entry.slot }
+      }
+      return { status: 'processing', signature, slot: entry.slot }
     },
     enabled: !!signature && !!client,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     refetchInterval: (query) => {
       const data = query.state.data
-      if (!data) return 2_000
-      if (['finalized', 'confirmed', 'failed', 'expired'].includes(data.status)) {
+      // Stop polling on terminal states OR rpc_unavailable
+      if (data && ['finalized', 'confirmed', 'failed', 'expired', 'rpc_unavailable'].includes(data.status)) {
         return false
       }
       return 2_000
