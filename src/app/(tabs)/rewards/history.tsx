@@ -123,7 +123,7 @@ export default function RewardsHistoryScreen() {
         <SegmentedControl segments={SEGMENTS} selectedIndex={selectedIndex} onChange={setSelectedIndex} />
       </View>
 
-      {/* Paginated history list */}
+      {/* Paginated history list — FlashList v2 auto-measures, no estimatedItemSize needed */}
       <FlashList
         data={events}
         renderItem={renderItem}

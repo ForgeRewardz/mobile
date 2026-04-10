@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text } from 'react-native'
+import { Image } from 'expo-image'
 import { colors, fonts } from '@/theme/tokens'
 import { StatusPill } from './StatusPill'
 import type { StatusValue } from './StatusPill'
@@ -51,27 +52,36 @@ function RewardHistoryRowInner({ event }: RewardHistoryRowProps) {
         gap: 12,
       }}
     >
-      {/* Protocol icon placeholder */}
-      <View
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
-          backgroundColor: colors.surfaceContainerHighest,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Text
+      {/* Protocol icon — expo-image when URL available, fallback to initial chip */}
+      {event.protocolIcon ? (
+        <Image
+          source={{ uri: event.protocolIcon }}
+          style={{ width: 24, height: 24, borderRadius: 12 }}
+          contentFit="cover"
+          transition={150}
+        />
+      ) : (
+        <View
           style={{
-            color: colors.onSurfaceVariant,
-            fontFamily: fonts.label,
-            fontSize: 10,
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: colors.surfaceContainerHighest,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {event.protocolName.charAt(0).toUpperCase()}
-        </Text>
-      </View>
+          <Text
+            style={{
+              color: colors.onSurfaceVariant,
+              fontFamily: fonts.label,
+              fontSize: 10,
+            }}
+          >
+            {event.protocolName.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+      )}
 
       {/* Action text */}
       <View style={{ flex: 1, gap: 2 }}>

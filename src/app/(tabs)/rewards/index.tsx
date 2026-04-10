@@ -6,6 +6,7 @@ import { PointsBadge, RewardHistoryRow, StatusPill } from '@/components/cards'
 import { LoadingSkeleton, EmptyStateBlock } from '@/components/feedback'
 import { usePointsBalance } from '@/hooks/use-points-balance'
 import { usePointsActivity } from '@/hooks/use-points-activity'
+import { usePendingCompletions, type PendingCompletion } from '@/hooks/use-pending-completions'
 import { colors, typography, spacing, radii } from '@/theme/tokens'
 import { formatPoints } from '@/utils/format'
 import type { CompletionStatus, PointEvent } from '@/types/api'
@@ -29,34 +30,8 @@ function pointEventStatus(type: PointEvent['type']): StatusValue {
   }
 }
 
-/**
- * Describes a single pending completion surfaced in the Rewards screen.
- * Backed by AsyncStorage / a centralised completion store in future work —
- * for now the hook returns an empty array so the UI shell renders correctly
- * without needing cross-screen state plumbing.
- */
-interface PendingCompletion {
-  id: string
-  offerTitle: string
-  status: CompletionStatus
-  createdAt: string
-}
-
-interface UsePendingCompletionsResult {
-  data: PendingCompletion[]
-  isLoading: boolean
-}
-
-/**
- * Returns the active pending completions for the current user.
- *
- * TODO(task-28): Wire up to AsyncStorage (`rewardz:pending-completions`) or a
- * centralised completion store once the Blink execution flow writes to it on
- * submit. Terminal statuses should be pruned when detected.
- */
-function usePendingCompletions(): UsePendingCompletionsResult {
-  return { data: [], isLoading: false }
-}
+// usePendingCompletions is imported from '@/hooks/use-pending-completions'
+// It reads the AsyncStorage-backed list populated by the Blink execution flow.
 
 /**
  * Non-terminal completion statuses eligible for the "Verification in Progress"
@@ -101,7 +76,7 @@ interface PendingCompletionCardProps {
 function PendingCompletionCard({ completion, onPress }: PendingCompletionCardProps) {
   return (
     <Pressable
-      onPress={() => onPress(completion.id)}
+      onPress={() => onPress(completion.completionId)}
       accessibilityRole="button"
       accessibilityLabel={`Resume verification for ${completion.offerTitle}`}
       style={({ pressed }) => ({
@@ -400,7 +375,7 @@ export default function RewardsScreen() {
             >
               {activePendingCompletions.map((completion) => (
                 <PendingCompletionCard
-                  key={completion.id}
+                  key={completion.completionId}
                   completion={completion}
                   onPress={handlePendingCompletionPress}
                 />

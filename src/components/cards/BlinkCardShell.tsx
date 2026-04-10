@@ -1,6 +1,11 @@
 import { View, Text } from 'react-native'
 import { colors, fonts, radii } from '@/theme/tokens'
 
+// Re-export Dialect's Blink component so screens can opt into it as an
+// enhancement over NativeBlinkCard. NativeBlinkCard is the PRIMARY
+// implementation for React 19 / RN 0.83 compat reasons; Dialect is opt-in.
+export { Blink as DialectBlink, Miniblink as DialectMiniblink } from '@dialectlabs/blinks-react-native'
+
 interface BlinkCardShellProps {
   children: React.ReactNode
   title?: string

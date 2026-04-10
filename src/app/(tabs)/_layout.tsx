@@ -2,6 +2,7 @@ import { Tabs, Redirect } from 'expo-router'
 import { View } from 'react-native'
 import { useMobileWallet } from '@wallet-ui/react-native-kit'
 import { TabBarIcon } from '@/components/layout/TabBarIcon'
+import BottomTabBar from '@/components/navigation/BottomTabBar'
 import { usePointsBalance } from '@/hooks/use-points-balance'
 import { colors } from '@/theme/tokens'
 
@@ -43,16 +44,11 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <BottomTabBar {...(props as unknown as Parameters<typeof BottomTabBar>[0])} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.onSurfaceVariant,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
       }}
     >
       <Tabs.Screen

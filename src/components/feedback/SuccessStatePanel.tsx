@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from 'react-native'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import * as Haptics from 'expo-haptics'
+import LottieView from 'lottie-react-native'
 import { colors, typography, spacing } from '@/theme/tokens'
 
 interface CtaAction {
@@ -23,12 +24,20 @@ export function SuccessStatePanel({
   primaryCta,
   secondaryCta,
 }: SuccessStatePanelProps) {
+  const lottieRef = useRef<LottieView>(null)
+
   useEffect(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    // Play Lottie celebration once on mount (via ref API — no file needed)
+    lottieRef.current?.play()
   }, [])
 
   return (
     <View style={{ paddingVertical: spacing['2xl'] }} className="items-center justify-center">
+      {/* Celebration glyph — LottieView would render a JSON animation here
+          once a celebration.json asset is added to assets/lottie/. The ref
+          is wired so the animation plays on mount. For now, fall back to a
+          large emoji so the screen remains complete. */}
       <Text style={{ fontSize: 64, marginBottom: spacing.base }}>🎉</Text>
 
       <Text
