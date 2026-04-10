@@ -1,5 +1,7 @@
 import { ScrollView, View, Text } from 'react-native'
 import { useRouter, useLocalSearchParams } from 'expo-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { SafeScreen } from '@/components/layout/SafeScreen'
 import { BackButton } from '@/components/navigation/BackButton'
 import { TrustBadge } from '@/components/cards'
@@ -8,27 +10,36 @@ import { colors, typography, spacing, radii } from '@/theme/tokens'
 import type { IntentOffer } from '@/types/api'
 
 /**
- * Placeholder hook — returns mock data for the requested offer id.
+ * Look up an offer in the TanStack Query cache by id.
  *
- * The real data source will be wired once a route exists that can pass
- * the full offer object through navigation state. For now the results
- * screen only forwards the id, so the detail screen renders a
- * deterministic mock.
+ * Both useFeaturedOffers and useIntentResolve populate the query cache with
+ * IntentOffer[] shaped responses. We search all cached offer queries for a
+ * matching id. If none found, return a minimal placeholder.
  */
-function usePendingOffer(id: string): IntentOffer {
-  return {
-    id,
-    protocolName: 'Sample Protocol',
-    actionType: 'swap',
-    title: 'Swap 100 USDC → SOL',
-    description: 'Execute this swap and earn points',
-    iconUrl: '',
-    actionUrl: 'https://example.com/action',
-    rewardPoints: 120,
-    eligibility: 'eligible',
-    trustScore: 8500,
-    rank: 1,
-  }
+function useCachedOffer(id: string): IntentOffer | null {
+  const queryClient = useQueryClient()
+
+  return useMemo(() => {
+    if (!id) return null
+
+    // Search cached featured offers
+    const featuredCaches = queryClient.getQueriesData<IntentOffer[]>({ queryKey: ['featured-offers'] })
+    for (const [, data] of featuredCaches) {
+      if (!data) continue
+      const match = data.find((o) => o.id === id)
+      if (match) return match
+    }
+
+    // Search cached intent resolve mutations
+    const intentCaches = queryClient.getQueriesData<{ offers: IntentOffer[] }>({ queryKey: ['intent-resolve'] })
+    for (const [, data] of intentCaches) {
+      if (!data?.offers) continue
+      const match = data.offers.find((o) => o.id === id)
+      if (match) return match
+    }
+
+    return null
+  }, [id, queryClient])
 }
 
 const ELIGIBILITY_RULES: readonly string[] = [
@@ -41,9 +52,27 @@ export default function OfferDetailScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ id: string }>()
   const offerId = params.id ?? ''
-  const offer = usePendingOffer(offerId)
+  const cachedOffer = useCachedOffer(offerId)
+
+  // Fallback offer if cache miss (e.g. deep link to unknown id)
+  const offer: IntentOffer = cachedOffer ?? {
+    id: offerId,
+    protocolName: 'Unknown offer',
+    actionType: '',
+    title: 'Offer not found in cache',
+    description: 'Browse the home screen to refresh the offer list and try again.',
+    iconUrl: '',
+    actionUrl: '',
+    rewardPoints: 0,
+    eligibility: 'unknown',
+    trustScore: 0,
+    rank: 0,
+  }
+
+  const canContinue = !!offer.actionUrl
 
   const handleContinue = () => {
+    if (!canContinue) return
     router.push({
       pathname: '/(tabs)/home/blink',
       params: { offerId: offer.id, actionUrl: offer.actionUrl },
@@ -270,7 +299,11 @@ export default function OfferDetailScreen() {
         </View>
       </ScrollView>
 
-      <StickyBottomCTA label="Continue with Blink" onPress={handleContinue} />
+      <StickyBottomCTA
+        label={canContinue ? 'Continue with Blink' : 'No action available'}
+        onPress={handleContinue}
+        disabled={!canContinue}
+      />
     </SafeScreen>
   )
 }

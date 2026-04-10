@@ -77,7 +77,7 @@ export default function SubmitTweetScreen() {
   }, [tweetUrl, selectedProtocolId, submitMutation])
 
   const handleViewRewards = useCallback(() => {
-    router.push('/(tabs)/account')
+    router.replace('/(tabs)/rewards')
   }, [router])
 
   const isSubmitDisabled = tweetUrl.trim().length === 0 || submitMutation.isPending
