@@ -20,9 +20,12 @@ interface IntentOfferCardProps {
 }
 
 export function IntentOfferCard({ offer, onPress, onRunAction }: IntentOfferCardProps) {
+  const rewardPointsLabel = `${offer.rewardPoints.toLocaleString('en-US')} points`
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Offer: ${offer.title}. ${offer.protocolName}. Reward ${rewardPointsLabel}.`}
       style={({ pressed }) => ({
         backgroundColor: colors.surfaceContainerLow,
         borderRadius: radii['2xl'],
@@ -123,6 +126,8 @@ export function IntentOfferCard({ offer, onPress, onRunAction }: IntentOfferCard
 
         <Pressable
           onPress={onRunAction}
+          accessibilityRole="button"
+          accessibilityLabel={`Run action for ${offer.title}`}
           style={({ pressed }) => ({
             backgroundColor: pressed ? colors.primaryContainer : colors.primary,
             borderRadius: 9999,

@@ -293,7 +293,18 @@ export default function RewardsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Total balance card */}
-        <View style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.xs }}>
+        <View
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={
+            balance
+              ? `Total points earned: ${balance.totalEarned.toLocaleString('en-US')}`
+              : balanceLoading
+                ? 'Loading total points'
+                : 'Total points unavailable'
+          }
+          style={{ alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.xs }}
+        >
           {balanceLoading ? (
             <View style={{ gap: spacing.sm, alignItems: 'center', width: '100%' }}>
               <LoadingSkeleton width={180} height={56} borderRadius={radii.lg} />

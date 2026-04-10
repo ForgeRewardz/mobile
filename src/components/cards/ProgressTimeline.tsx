@@ -12,7 +12,6 @@ export function ProgressTimeline({ steps, currentStep }: ProgressTimelineProps) 
       {steps.map((label, index) => {
         const isCompleted = index < currentStep
         const isCurrent = index === currentStep
-        const isFuture = index > currentStep
 
         let dotColor = colors.surfaceContainerHighest
         if (isCompleted) dotColor = colors.primary

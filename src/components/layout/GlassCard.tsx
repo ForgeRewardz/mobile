@@ -1,6 +1,5 @@
 import { Platform, View, type ViewStyle, type StyleProp } from 'react-native'
 import { BlurView } from 'expo-blur'
-import { colors } from '@/theme/tokens'
 
 interface GlassCardProps {
   children: React.ReactNode

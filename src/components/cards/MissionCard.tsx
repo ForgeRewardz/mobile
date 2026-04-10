@@ -25,9 +25,13 @@ export function MissionCard({ quest, onPress }: MissionCardProps) {
     return null
   }
 
+  const rewardPointsLabel = `${quest.rewardPoints.toLocaleString('en-US')} points`
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Mission: ${quest.title}. ${quest.protocolName}. Reward ${rewardPointsLabel}.`}
+      accessibilityHint={quest.description}
       style={({ pressed }) => ({
         backgroundColor: colors.surfaceContainerLow,
         borderRadius: radii['2xl'],

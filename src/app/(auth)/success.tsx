@@ -31,7 +31,7 @@ export default function SuccessScreen() {
           <Text style={{ fontSize: 32, color: colors.primary }}>✓</Text>
         </View>
         <Text className="text-3xl text-on-surface mb-4" style={{ fontFamily: typography.headlineFont }}>
-          You're all set!
+          You&apos;re all set!
         </Text>
         <Text
           className="text-base text-on-surface-variant text-center mb-8"

@@ -31,6 +31,8 @@ export default function ProfileScreen() {
           <Pressable
             key={item.label}
             onPress={() => router.push(item.route)}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.label}, opens ${item.label.toLowerCase()} screen`}
             className="py-4 border-b border-gray-100 dark:border-gray-800"
           >
             <Text className="text-base text-gray-900 dark:text-white">{item.label}</Text>
@@ -38,7 +40,12 @@ export default function ProfileScreen() {
         ))}
 
         {connected && (
-          <Pressable onPress={disconnect} className="mt-8 py-3 items-center">
+          <Pressable
+            onPress={disconnect}
+            accessibilityRole="button"
+            accessibilityLabel="Disconnect wallet"
+            className="mt-8 py-3 items-center"
+          >
             <Text className="text-red-500 font-medium">Disconnect Wallet</Text>
           </Pressable>
         )}

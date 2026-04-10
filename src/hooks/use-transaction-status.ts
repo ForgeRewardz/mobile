@@ -39,11 +39,11 @@ export function useTransactionStatus(signature: string | null): UseQueryResult<T
 
       try {
         const response = (await rpc.getSignatureStatuses([signature as unknown]).send()) as {
-          value?: Array<{
+          value?: ({
             slot?: number
             err?: unknown
             confirmationStatus?: string
-          } | null>
+          } | null)[]
         }
 
         const entry = response.value?.[0]

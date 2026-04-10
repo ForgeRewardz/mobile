@@ -18,6 +18,9 @@ export function QuickActionChips({ chips = DEFAULT_CHIPS, selected, onSelect }: 
           <Pressable
             key={chip}
             onPress={() => onSelect(chip)}
+            accessibilityRole="button"
+            accessibilityLabel={`Quick action: ${chip}`}
+            accessibilityState={{ selected: isActive }}
             className="px-4 py-2 rounded-full"
             style={{
               backgroundColor: isActive ? colors.primary : colors.surfaceContainerHighest,
