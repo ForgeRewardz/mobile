@@ -6,6 +6,10 @@ import BottomTabBar from '@/components/navigation/BottomTabBar'
 import { usePointsBalance } from '@/hooks/use-points-balance'
 import { colors } from '@/theme/tokens'
 
+// TODO: remove once wallet is available — dev-only bypass so we can preview
+// the home/explore/rewards/profile tabs without an MWA wallet on the device.
+const DEV_BYPASS_AUTH = true
+
 /**
  * Tab icon wrapper with a pending-points notification dot.
  * Shown on the Rewards tab when the user has pending points.
@@ -38,7 +42,7 @@ export default function TabLayout() {
   const { account } = useMobileWallet()
 
   // Auth guard: prevent unauthenticated deep-link access to tabs
-  if (!account) {
+  if (!account && !DEV_BYPASS_AUTH) {
     return <Redirect href="/(auth)/welcome" />
   }
 

@@ -3,6 +3,7 @@ import '../global.css'
 import { useEffect } from 'react'
 import { Slot } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { MobileWalletProvider } from '@wallet-ui/react-native-kit'
 import { QueryProvider } from '@/providers/QueryProvider'
 import { getCluster, getAppIdentity } from '@/config/solana'
@@ -46,12 +47,14 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <MobileWalletProvider cluster={cluster} identity={identity}>
-        <QueryProvider>
-          <Slot />
-        </QueryProvider>
-      </MobileWalletProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#10141a' }}>
+      <SafeAreaProvider>
+        <MobileWalletProvider cluster={cluster} identity={identity}>
+          <QueryProvider>
+            <Slot />
+          </QueryProvider>
+        </MobileWalletProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }
