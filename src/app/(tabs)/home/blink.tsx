@@ -9,6 +9,8 @@ import { fetchBlinkMetadata } from '@/services/blink-service'
 import { executeBlink } from '@/services/blink-executor'
 import { useMwaBlinkAdapter } from '@/hooks/use-mwa-blink-adapter'
 import { useWallet } from '@/hooks/useWallet'
+import { useCompletionInit } from '@/hooks/use-completion-init'
+import { useRewardzClient } from '@/hooks/useRewardzClient'
 import { colors, spacing, typography } from '@/theme/tokens'
 import type { BlinkMetadata } from '@/types/api'
 
@@ -46,6 +48,8 @@ export default function BlinkExecutionScreen() {
   const { actionUrl, offerId } = useLocalSearchParams<{ actionUrl: string; offerId?: string }>()
   const { publicKey } = useWallet()
   const adapter = useMwaBlinkAdapter()
+  const completionInit = useCompletionInit()
+  const sdk = useRewardzClient()
 
   const [state, setState] = useState<ExecutionState>({ kind: 'loading_metadata' })
 
@@ -109,6 +113,19 @@ export default function BlinkExecutionScreen() {
     setState({ kind: 'preparing_tx', metadata, parameters })
 
     try {
+      // Initialise the completion record BEFORE executing the Blink.
+      // This gives us the completionId for the verification pipeline.
+      let completionId = ''
+      if (offerId && sdk) {
+        try {
+          const init = await completionInit.mutateAsync(offerId)
+          completionId = init.completionId
+        } catch {
+          // Completion init failed — proceed without tracking.
+          // The Blink will still execute; we just won't have verification polling.
+        }
+      }
+
       // Flip to `awaiting_wallet` right before the MWA intent fires. We can't
       // observe the actual popup lifecycle from JS, so this is a best-effort
       // UI cue: POST is in-flight first, then the wallet handoff dominates.
@@ -123,12 +140,21 @@ export default function BlinkExecutionScreen() {
         adapter,
       })
 
+      // Report signature back to the completion tracker so the verifier
+      // can start. Fire-and-forget — polling on the next screen is the
+      // source of truth.
+      if (completionId && sdk) {
+        sdk.reportCallback(completionId, result.signature).catch(() => {
+          // Callback failure is non-fatal — chain verification still runs
+        })
+      }
+
       setState({ kind: 'submitted', signature: result.signature })
       router.replace({
         pathname: '/(tabs)/home/pending',
         params: {
           signature: result.signature,
-          completionId: offerId ?? '',
+          completionId,
         },
       })
     } catch (err: unknown) {
@@ -139,7 +165,7 @@ export default function BlinkExecutionScreen() {
         setState({ kind: 'post_failed', metadata, parameters, error: message })
       }
     }
-  }, [state, adapter, publicKey, actionUrl, offerId, router])
+  }, [state, adapter, publicKey, actionUrl, offerId, router, sdk, completionInit])
 
   const handleRetryAfterRejection = useCallback(() => {
     setState((prev) => {
