@@ -24,6 +24,7 @@ export const colors: Record<string, string> = {
 export type Colors = typeof colors
 
 export const typography: Record<string, string> = {
+  // Canonical keys
   displayFont: 'Manrope_800ExtraBold',
   displayLg: 'Manrope_800ExtraBold',
   displayMd: 'Manrope_700Bold',
@@ -44,6 +45,14 @@ export const typography: Record<string, string> = {
   labelSmall: 'Inter_500Medium',
   labelBold: 'Inter_700Bold',
   buttonFont: 'Inter_700Bold',
+  // Bare aliases — components reference these via the `fonts` re-export
+  label: 'Inter_600SemiBold',
+  button: 'Inter_700Bold',
+  body: 'Inter_400Regular',
+  headline: 'Manrope_700Bold',
+  display: 'Manrope_800ExtraBold',
+  title: 'Manrope_700Bold',
+  caption: 'Inter_500Medium',
 }
 
 // Alias — some components import `fonts` instead of `typography`
