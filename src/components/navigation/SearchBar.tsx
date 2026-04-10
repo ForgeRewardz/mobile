@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type RefObject } from 'react'
 import { Pressable, Text, TextInput, View } from 'react-native'
 import { colors, typography, radii } from '@/theme/tokens'
 
@@ -7,6 +7,8 @@ interface SearchBarProps {
   onChangeText: (text: string) => void
   onSubmit?: () => void
   placeholder?: string
+  /** Optional ref forwarded to the underlying TextInput (e.g. for auto-focus). */
+  inputRef?: RefObject<TextInput | null>
 }
 
 /**
@@ -17,7 +19,13 @@ interface SearchBarProps {
  *   a thin View wrapper on Android — no 1px solid border).
  * - Left: magnifying glass emoji. Right: clear button when text is present.
  */
-export function SearchBar({ value, onChangeText, onSubmit, placeholder = 'What do you want to do?' }: SearchBarProps) {
+export function SearchBar({
+  value,
+  onChangeText,
+  onSubmit,
+  placeholder = 'What do you want to do?',
+  inputRef,
+}: SearchBarProps) {
   const [focused, setFocused] = useState(false)
 
   return (
@@ -43,6 +51,7 @@ export function SearchBar({ value, onChangeText, onSubmit, placeholder = 'What d
       <Text style={{ fontSize: 16, marginRight: 8 }}>{'\uD83D\uDD0D'}</Text>
 
       <TextInput
+        ref={inputRef}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmit}
