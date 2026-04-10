@@ -2,13 +2,13 @@ import { ScrollView, View, Text, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeScreen } from '@/components/layout/SafeScreen'
 import { TopAppBar } from '@/components/navigation/TopAppBar'
-import { PointsBadge, RewardHistoryRow } from '@/components/cards'
+import { PointsBadge, RewardHistoryRow, StatusPill } from '@/components/cards'
 import { LoadingSkeleton, EmptyStateBlock } from '@/components/feedback'
 import { usePointsBalance } from '@/hooks/use-points-balance'
 import { usePointsActivity } from '@/hooks/use-points-activity'
 import { colors, typography, spacing, radii } from '@/theme/tokens'
 import { formatPoints } from '@/utils/format'
-import type { PointEvent } from '@/types/api'
+import type { CompletionStatus, PointEvent } from '@/types/api'
 import type { StatusValue } from '@/components/cards'
 
 /**
@@ -27,6 +27,129 @@ function pointEventStatus(type: PointEvent['type']): StatusValue {
     default:
       return 'pending'
   }
+}
+
+/**
+ * Describes a single pending completion surfaced in the Rewards screen.
+ * Backed by AsyncStorage / a centralised completion store in future work —
+ * for now the hook returns an empty array so the UI shell renders correctly
+ * without needing cross-screen state plumbing.
+ */
+interface PendingCompletion {
+  id: string
+  offerTitle: string
+  status: CompletionStatus
+  createdAt: string
+}
+
+interface UsePendingCompletionsResult {
+  data: PendingCompletion[]
+  isLoading: boolean
+}
+
+/**
+ * Returns the active pending completions for the current user.
+ *
+ * TODO(task-28): Wire up to AsyncStorage (`rewardz:pending-completions`) or a
+ * centralised completion store once the Blink execution flow writes to it on
+ * submit. Terminal statuses should be pruned when detected.
+ */
+function usePendingCompletions(): UsePendingCompletionsResult {
+  return { data: [], isLoading: false }
+}
+
+/**
+ * Non-terminal completion statuses eligible for the "Verification in Progress"
+ * section. Anything not in this set is considered resolved and should not be
+ * surfaced here.
+ */
+const NON_TERMINAL_COMPLETION_STATUSES: CompletionStatus[] = ['awaiting_signature', 'awaiting_chain_verification']
+
+function isNonTerminalCompletion(status: CompletionStatus): boolean {
+  return NON_TERMINAL_COMPLETION_STATUSES.includes(status)
+}
+
+/**
+ * Format an ISO timestamp as a short relative string ("2m ago", "3h ago").
+ * Mirrors the helper used by RewardHistoryRow — kept local to avoid
+ * introducing a new shared util for a single caller.
+ */
+function getRelativeTime(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diffMs = Math.max(0, now - then)
+
+  const minutes = Math.floor(diffMs / 60_000)
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+
+  const months = Math.floor(days / 30)
+  return `${months}mo ago`
+}
+
+interface PendingCompletionCardProps {
+  completion: PendingCompletion
+  onPress: (completionId: string) => void
+}
+
+function PendingCompletionCard({ completion, onPress }: PendingCompletionCardProps) {
+  return (
+    <Pressable
+      onPress={() => onPress(completion.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`Resume verification for ${completion.offerTitle}`}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.base,
+        gap: spacing.md,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <View style={{ flex: 1, gap: spacing.xs }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontFamily: typography.labelSemiBold,
+            fontSize: 13,
+            lineHeight: 18,
+            color: colors.onSurface,
+          }}
+        >
+          {completion.offerTitle}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <StatusPill status={completion.status} />
+          <Text
+            style={{
+              fontFamily: typography.bodyRegular,
+              fontSize: 11,
+              lineHeight: 16,
+              color: colors.onSurfaceVariant,
+            }}
+          >
+            {getRelativeTime(completion.createdAt)}
+          </Text>
+        </View>
+      </View>
+      <Text
+        style={{
+          fontFamily: typography.buttonFont,
+          fontSize: 13,
+          color: colors.primaryContainer,
+        }}
+      >
+        →
+      </Text>
+    </Pressable>
+  )
 }
 
 interface BalanceCellProps {
@@ -131,6 +254,7 @@ export default function RewardsScreen() {
   const router = useRouter()
   const balanceQuery = usePointsBalance()
   const activityQuery = usePointsActivity({ pageSize: 20 })
+  const pendingCompletionsQuery = usePendingCompletions()
 
   const balance = balanceQuery.data
   const balanceLoading = balanceQuery.isLoading
@@ -140,6 +264,17 @@ export default function RewardsScreen() {
   const activityError = activityQuery.isError
   const allEvents: PointEvent[] = activityQuery.data?.pages.flatMap((p) => p.events) ?? []
   const recentEvents = allEvents.slice(0, 5)
+
+  // Only surface non-terminal completions. Terminal ones should have been
+  // pruned from the underlying store once the verifying screen resolves them.
+  const activePendingCompletions = pendingCompletionsQuery.data.filter((c) => isNonTerminalCompletion(c.status))
+
+  const handlePendingCompletionPress = (completionId: string) => {
+    router.push({
+      pathname: '/(tabs)/home/verifying',
+      params: { completionId },
+    })
+  }
 
   return (
     <SafeScreen noPadding>
@@ -228,6 +363,40 @@ export default function RewardsScreen() {
             </>
           )}
         </View>
+
+        {/*
+         * Verification in Progress
+         * Only rendered when there are active (non-terminal) pending completions.
+         * Each card resumes the verifying flow for that completion.
+         */}
+        {activePendingCompletions.length > 0 && (
+          <View style={{ gap: spacing.md }}>
+            <Text
+              style={{
+                fontFamily: typography.headlineMedium,
+                fontSize: 18,
+                color: colors.onSurface,
+              }}
+            >
+              Verification in Progress
+            </Text>
+            <View
+              style={{
+                backgroundColor: colors.surfaceContainerLow,
+                borderRadius: radii['2xl'],
+                overflow: 'hidden',
+              }}
+            >
+              {activePendingCompletions.map((completion) => (
+                <PendingCompletionCard
+                  key={completion.id}
+                  completion={completion}
+                  onPress={handlePendingCompletionPress}
+                />
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Recent Activity */}
         <View style={{ gap: spacing.md }}>
@@ -328,39 +497,6 @@ export default function RewardsScreen() {
           ctaLabel="Open sync"
           onPress={() => router.push('/(tabs)/rewards/sync')}
         />
-
-        {/* Pending completions — placeholder for Task #29 */}
-        <View style={{ gap: spacing.md }}>
-          <Text
-            style={{
-              fontFamily: typography.headlineMedium,
-              fontSize: 18,
-              color: colors.onSurface,
-            }}
-          >
-            Pending Completions
-          </Text>
-          <View
-            style={{
-              backgroundColor: colors.surfaceContainerLow,
-              borderRadius: radii['2xl'],
-              padding: spacing.xl,
-              alignItems: 'center',
-              gap: spacing.xs,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: typography.bodyMedium,
-                fontSize: 13,
-                color: colors.onSurfaceVariant,
-                textAlign: 'center',
-              }}
-            >
-              Completions awaiting verification will appear here.
-            </Text>
-          </View>
-        </View>
       </ScrollView>
     </SafeScreen>
   )
