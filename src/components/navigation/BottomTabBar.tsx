@@ -1,7 +1,18 @@
 import { Platform, Pressable, Text, View } from 'react-native'
 import { BlurView } from 'expo-blur'
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { colors, typography } from '@/theme/tokens'
+
+// Minimal local type — @react-navigation/bottom-tabs isn't used (Expo Router file-based routing)
+// This component implements the BottomTabBarProps shape from Expo Router's tabs.
+interface BottomTabBarProps {
+  state: { routes: { key: string; name: string; params?: object }[]; index: number }
+  descriptors: Record<string, { options: { tabBarLabel?: string; title?: string; tabBarAccessibilityLabel?: string } }>
+  navigation: {
+    emit: (event: { type: string; target?: string; canPreventDefault?: boolean }) => { defaultPrevented: boolean }
+    navigate: (name: string, params?: object) => void
+  }
+  insets: { bottom: number; top: number; left: number; right: number }
+}
 
 const TAB_ICONS: Record<string, string> = {
   home: '\u2302',

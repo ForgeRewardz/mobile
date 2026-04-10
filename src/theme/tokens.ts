@@ -1,4 +1,4 @@
-export const colors = {
+export const colors: Record<string, string> = {
   surface: '#10141a',
   surfaceContainerLow: '#181c22',
   surfaceContainer: '#1c2026',
@@ -19,30 +19,46 @@ export const colors = {
   questHold: '#3b82f6',
   questEngagement: '#22c55e',
   questNewcomer: '#eab308',
-} as const
+}
 
 export type Colors = typeof colors
 
-export const typography = {
+export const typography: Record<string, string> = {
   displayFont: 'Manrope_800ExtraBold',
+  displayLg: 'Manrope_800ExtraBold',
+  displayMd: 'Manrope_700Bold',
   headlineFont: 'Manrope_700Bold',
+  headlineLarge: 'Manrope_700Bold',
   headlineMdFont: 'Manrope_600SemiBold',
+  headlineMedium: 'Manrope_600SemiBold',
+  headlineSmall: 'Manrope_600SemiBold',
   bodyFont: 'Inter_400Regular',
+  bodyRegular: 'Inter_400Regular',
+  bodyLarge: 'Inter_500Medium',
   bodyMdFont: 'Inter_500Medium',
+  bodyMedium: 'Inter_500Medium',
+  bodySmall: 'Inter_400Regular',
   labelFont: 'Inter_600SemiBold',
+  labelSemiBold: 'Inter_600SemiBold',
+  labelMedium: 'Inter_500Medium',
+  labelSmall: 'Inter_500Medium',
+  labelBold: 'Inter_700Bold',
   buttonFont: 'Inter_700Bold',
-} as const
+}
 
-export const radii = {
+// Alias — some components import `fonts` instead of `typography`
+export const fonts = typography
+
+export const radii: Record<string, number> = {
   sm: 4,
   md: 8,
   lg: 12,
   xl: 16,
   '2xl': 24,
   full: 9999,
-} as const
+}
 
-export const spacing = {
+export const spacing: Record<string, number> = {
   xs: 4,
   sm: 8,
   md: 12,
@@ -51,7 +67,7 @@ export const spacing = {
   xl: 24,
   '2xl': 32,
   '3xl': 48,
-} as const
+}
 
 export const elevation = {
   ambient: {
