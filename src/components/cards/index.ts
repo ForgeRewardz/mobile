@@ -1,6 +1,7 @@
 export { MissionCard } from './MissionCard'
 export { IntentOfferCard } from './IntentOfferCard'
 export { BlinkCardShell } from './BlinkCardShell'
+export { NativeBlinkCard } from './NativeBlinkCard'
 export { StakeSummaryCard } from './StakeSummaryCard'
 export { TrustBadge } from './TrustBadge'
 export { StatusPill } from './StatusPill'
