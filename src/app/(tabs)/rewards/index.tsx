@@ -7,6 +7,7 @@ import { LoadingSkeleton, EmptyStateBlock } from '@/components/feedback'
 import { usePointsBalance } from '@/hooks/use-points-balance'
 import { usePointsActivity } from '@/hooks/use-points-activity'
 import { usePendingCompletions, type PendingCompletion } from '@/hooks/use-pending-completions'
+import { useMyRank } from '@/hooks/use-my-rank'
 import { colors, typography, spacing, radii } from '@/theme/tokens'
 import { formatPoints } from '@/utils/format'
 import type { CompletionStatus, PointEvent } from '@/types/api'
@@ -230,6 +231,7 @@ export default function RewardsScreen() {
   const balanceQuery = usePointsBalance()
   const activityQuery = usePointsActivity({ pageSize: 20 })
   const pendingCompletionsQuery = usePendingCompletions()
+  const myRankQuery = useMyRank()
 
   const balance = balanceQuery.data
   const balanceLoading = balanceQuery.isLoading
@@ -349,6 +351,69 @@ export default function RewardsScreen() {
             </>
           )}
         </View>
+
+        {/*
+         * Airdrop summary card — links to the full leaderboard screen.
+         * Renders the connected user's rank when `useMyRank()` has data;
+         * otherwise shows a muted "Connect to see your rank" prompt.
+         */}
+        <Pressable
+          onPress={() => router.push('/(tabs)/rewards/airdrop')}
+          accessibilityRole="button"
+          accessibilityLabel="View airdrop leaderboard"
+          style={({ pressed }) => ({
+            backgroundColor: colors.surfaceContainerLow,
+            borderRadius: radii['2xl'],
+            padding: spacing.xl,
+            gap: spacing.xs,
+            borderWidth: 1,
+            borderColor: colors.outlineVariant,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Text
+            style={{
+              fontFamily: typography.labelSmall,
+              fontSize: 10,
+              color: colors.onSurfaceVariant,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+            }}
+          >
+            Airdrop Season
+          </Text>
+          {myRankQuery.data ? (
+            <Text
+              style={{
+                fontFamily: typography.headlineMedium,
+                fontSize: 18,
+                color: colors.primary,
+              }}
+            >
+              #{myRankQuery.data.rank} · {Number(BigInt(myRankQuery.data.totalPoints)).toLocaleString('en-US')} pts
+            </Text>
+          ) : (
+            <Text
+              style={{
+                fontFamily: typography.bodyRegular,
+                fontSize: 14,
+                color: colors.onSurfaceVariant,
+              }}
+            >
+              Connect to see your rank
+            </Text>
+          )}
+          <Text
+            style={{
+              marginTop: spacing.sm,
+              fontFamily: typography.buttonFont,
+              fontSize: 13,
+              color: colors.primaryContainer,
+            }}
+          >
+            View Full Leaderboard →
+          </Text>
+        </Pressable>
 
         {/*
          * Verification in Progress
