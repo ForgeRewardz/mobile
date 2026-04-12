@@ -1,6 +1,6 @@
 # Rewardz Mobile
 
-Solana-based reward infrastructure mobile app. Discover rewarded on-chain actions, earn points, and mint Token X.
+Solana-based reward infrastructure mobile app. Discover rewarded on-chain actions, earn points, and play mining rounds for Token X.
 
 ## Stack
 
@@ -31,8 +31,8 @@ pnpm run dev             # Expo dev server
 
 ## Scripts
 
-| Command             | Description                      |
-| ------------------- | -------------------------------- |
+| Command              | Description                      |
+| -------------------- | -------------------------------- |
 | `pnpm run android`   | Build and run Android            |
 | `pnpm run dev`       | Expo dev server with cache reset |
 | `pnpm run typecheck` | TypeScript type checking         |
@@ -49,7 +49,7 @@ src/
 │   ├── (tabs)/       # Main app (Home, Explore, Rewards, Profile)
 │   │   ├── home/     # Intent search → results → offer → blink → tx flow
 │   │   ├── explore/  # Categories, missions
-│   │   ├── rewards/  # Points, history, mining teaser
+│   │   ├── rewards/  # Points, history, mining game
 │   │   └── profile/  # Wallet, stake, settings
 │   ├── locked.tsx    # Teaser mode (no X stake)
 │   └── error.tsx     # Error/offline
@@ -78,6 +78,13 @@ See `.env.example` for all required variables. Key ones:
 - Wallet session persistence handled by `@wallet-ui/react-native-kit` via AsyncStorage
 - `@dialectlabs/blinks` deferred to TODO-0012 (requires web3.js peer dep evaluation)
 - API client is a thin HTTP layer until `@rewardz/sdk` upgrades to kit v6
+
+## Mining Game
+
+- `/(tabs)/rewards/mining` shows the active 1-minute round, total player count, caller deployment state, and result reveal.
+- `use-game-round` and `use-round-result` read `/v1/game/round/*` API routes. Other players' deployed points are not displayed.
+- `use-deploy-to-round` builds the `deployToRound` instruction with `@rewardz/sdk/generated`, compiles the transaction with `@solana/kit`, and signs through Mobile Wallet Adapter.
+- The default program fallback is `mineHEHyaVbQAkcPDDCuCSbkfGNid1RVz6GzcEgSVTh`; override `REWARDZ_PROGRAM_ID` per environment when deployed.
 
 ## Distribution
 

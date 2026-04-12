@@ -5,7 +5,11 @@ import {
   SEED_USER_STAKE,
   SEED_PROTOCOL_STAKE,
   SEED_POINT_ROOT,
-  SEED_MINT_ATTEMPT,
+  SEED_GAME_CONFIG,
+  SEED_GAME_ROUND,
+  SEED_PLAYER_DEPLOYMENT,
+  SEED_GAME_TREASURY,
+  SEED_ROUND_VAULT,
 } from '@/config/constants'
 
 const utf8 = getUtf8Encoder()
@@ -13,6 +17,12 @@ const addressEncoder = getAddressEncoder()
 
 function programAddress() {
   return address(ENV.REWARDZ_PROGRAM_ID)
+}
+
+export function u64ToLeBytes(value: bigint | number | string): Uint8Array {
+  const bytes = new Uint8Array(8)
+  new DataView(bytes.buffer).setBigUint64(0, BigInt(value), true)
+  return bytes
 }
 
 export async function getConfigPda() {
@@ -43,14 +53,37 @@ export async function getPointRootPda() {
   })
 }
 
-export async function getMintAttemptPda(authority: string, nonce: bigint) {
+export async function getGameConfigPda() {
   return getProgramDerivedAddress({
     programAddress: programAddress(),
-    seeds: [
-      utf8.encode(SEED_MINT_ATTEMPT),
-      addressEncoder.encode(address(authority)),
-      // Little-endian u64 — matches Solana's on-chain byte order (LE on all supported platforms)
-      new Uint8Array(new BigUint64Array([nonce]).buffer),
-    ],
+    seeds: [utf8.encode(SEED_GAME_CONFIG)],
+  })
+}
+
+export async function getGameTreasuryPda() {
+  return getProgramDerivedAddress({
+    programAddress: programAddress(),
+    seeds: [utf8.encode(SEED_GAME_TREASURY)],
+  })
+}
+
+export async function getGameRoundPda(roundId: bigint | number | string) {
+  return getProgramDerivedAddress({
+    programAddress: programAddress(),
+    seeds: [utf8.encode(SEED_GAME_ROUND), u64ToLeBytes(roundId)],
+  })
+}
+
+export async function getRoundVaultPda(roundId: bigint | number | string) {
+  return getProgramDerivedAddress({
+    programAddress: programAddress(),
+    seeds: [utf8.encode(SEED_ROUND_VAULT), u64ToLeBytes(roundId)],
+  })
+}
+
+export async function getPlayerDeploymentPda(authority: string, roundId: bigint | number | string) {
+  return getProgramDerivedAddress({
+    programAddress: programAddress(),
+    seeds: [utf8.encode(SEED_PLAYER_DEPLOYMENT), u64ToLeBytes(roundId), addressEncoder.encode(address(authority))],
   })
 }

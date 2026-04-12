@@ -533,10 +533,10 @@ export default function RewardsScreen() {
           </View>
         </View>
 
-        {/* Burn-to-Mint teaser */}
+        {/* Mining game teaser */}
         <TeaserCard
-          title="Burn points to mint Token X"
-          subtitle="~10% success rate"
+          title="Deploy points into mining rounds"
+          subtitle="1-minute rounds, hit or miss results"
           ctaLabel="Try mining"
           onPress={() => router.push('/(tabs)/rewards/mining')}
         />

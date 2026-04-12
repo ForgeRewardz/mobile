@@ -4,7 +4,14 @@ export const SEED_USER_STAKE = 'user_stake'
 export const SEED_PROTOCOL_STAKE = 'protocol_stake'
 export const SEED_RENTAL = 'rental'
 export const SEED_POINT_ROOT = 'point_root'
-export const SEED_MINT_ATTEMPT = 'mint_attempt'
+export const SEED_GAME_CONFIG = 'game_config'
+export const SEED_GAME_ROUND = 'game_round'
+export const SEED_PLAYER_DEPLOYMENT = 'deployment'
+export const SEED_GAME_TREASURY = 'game_treasury'
+export const SEED_ROUND_VAULT = 'round_vault'
+
+export const DEFAULT_GAME_FEE_LAMPORTS = 6_000_000
+export const DEFAULT_MINING_ROUND_SLOTS = 150
 
 // Tab names
 export const TABS = {

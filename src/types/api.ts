@@ -69,6 +69,59 @@ export interface UserBalance {
   rank?: number
 }
 
+export type GameRoundStatus = 'waiting' | 'active' | 'settling' | 'settled' | 'skipped'
+
+export type MiningResultKind = 'pending' | 'hit' | 'miss' | 'skipped'
+
+export interface GameRoundSummary {
+  roundId: string
+  status: GameRoundStatus
+  startSlot: string
+  endSlot: string
+  estimatedEndsAt: string | null
+  playerCount: number
+  gameFeeLamports: string
+  hitRateBps: number
+  tokensPerRound: string
+  motherlodePool: string
+  motherlodeMinThreshold: string
+  motherlodeProbabilityBps: number
+}
+
+export interface PlayerDeploymentStatus {
+  walletAddress: string
+  roundId: string
+  pointsDeployed: string | null
+  feePaid: string | null
+  deployedAt: string | null
+  result: MiningResultKind
+  settled: boolean
+  isHit: boolean | null
+  rewardAmount: string
+  motherlodeShare: string
+  claimed: boolean
+}
+
+export interface CurrentGameRoundResponse {
+  round: GameRoundSummary | null
+  player: PlayerDeploymentStatus | null
+}
+
+export interface GameRoundResults {
+  round: GameRoundSummary
+  hitCount: number
+  totalHitPoints: string
+  tokensMinted: string
+  motherlodeTriggered: boolean
+  motherlodeAmount: string
+  player: PlayerDeploymentStatus | null
+}
+
+export interface GameRoundHistoryResponse {
+  entries: GameRoundSummary[]
+  total: number
+}
+
 export interface Quest {
   id: string
   title: string

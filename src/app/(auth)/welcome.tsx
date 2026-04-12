@@ -19,7 +19,7 @@ export default function WelcomeScreen() {
           className="text-base text-on-surface-variant text-center mb-12"
           style={{ fontFamily: typography.bodyFont }}
         >
-          Earn points for swaps, stakes, and mints across Solana protocols. Burn points to mint Token X.
+          Earn points for swaps, stakes, and mints across Solana protocols. Deploy points into mining rounds.
         </Text>
         <Pressable onPress={() => router.push('/(auth)/connect')} className="w-full active:opacity-80">
           <View
