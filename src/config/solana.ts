@@ -2,13 +2,14 @@ import { createSolanaDevnet, createSolanaMainnet } from '@wallet-ui/react-native
 import { ENV } from './env'
 
 export function getCluster() {
-  switch (ENV.SOLANA_CLUSTER) {
+  switch (ENV.SOLANA_NETWORK) {
     case 'mainnet-beta':
-      return createSolanaMainnet(ENV.RPC_URL)
+      return createSolanaMainnet(ENV.SOLANA_RPC_URL)
     case 'devnet':
     case 'staging':
+    case 'localnet':
     default:
-      return createSolanaDevnet(ENV.RPC_URL)
+      return createSolanaDevnet(ENV.SOLANA_RPC_URL)
   }
 }
 

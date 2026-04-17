@@ -2,6 +2,19 @@
 
 Solana-based reward infrastructure mobile app. Discover rewarded on-chain actions, earn points, and play mining rounds for Token X.
 
+## Local dev
+
+Part of the REWARDZ `mobileSpecs/` stack. For the full local setup, env canonicalisation, and migration guide, see [`../LOCAL-SETUP.md`](../LOCAL-SETUP.md).
+
+Quick path (from mobileSpecs/ root):
+
+```bash
+./scripts/bootstrap-local.sh           # surfpool + api + keeper (services)
+pnpm --dir mobile dev                  # Expo Metro; iOS sim / Android emulator
+```
+
+**Env renames applied:** `SOLANA_CLUSTER` → `SOLANA_NETWORK`, `RPC_URL` → `SOLANA_RPC_URL`, `INTENT_API_BASE_URL` → `API_BASE_URL`, `REWARDZ_PROGRAM_ID` → `PROGRAM_ID`. See LOCAL-SETUP.md §10 for migration.
+
 ## Stack
 
 - **Expo 55** / React Native 0.83 / React 19

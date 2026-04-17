@@ -2,7 +2,7 @@ import { ENV } from '@/config/env'
 import type { CurrentGameRoundResponse, GameRoundResults } from '@/types/api'
 
 function gameUrl(path: string, walletAddress?: string | null): string {
-  const base = ENV.INTENT_API_BASE_URL.replace(/\/$/, '')
+  const base = ENV.API_BASE_URL.replace(/\/$/, '')
   const url = new URL(`${base}/v1${path}`)
   if (walletAddress) {
     url.searchParams.set('wallet', walletAddress)

@@ -8,8 +8,8 @@ import { colors, typography, spacing, radii } from '@/theme/tokens'
 const NETWORK_SEGMENTS = ['Devnet', 'Mainnet']
 
 export default function SettingsScreen() {
-  const cluster = (Constants.expoConfig?.extra?.SOLANA_CLUSTER ?? 'devnet') as string
-  const selectedNetworkIndex = cluster === 'mainnet-beta' ? 1 : 0
+  const network = (Constants.expoConfig?.extra?.SOLANA_NETWORK ?? 'devnet') as string
+  const selectedNetworkIndex = network === 'mainnet-beta' ? 1 : 0
 
   const appVersion = Constants.expoConfig?.version ?? '0.0.0'
 

@@ -32,7 +32,7 @@ export function useDeployToRound(): UseMutationResult<string, Error, DeployToRou
       if (!Number.isSafeInteger(points) || points <= 0) throw new Error('Enter a whole point amount')
 
       const userAddress = address(publicKey.toString())
-      const programAddress = address(ENV.REWARDZ_PROGRAM_ID)
+      const programAddress = address(ENV.PROGRAM_ID)
       const roundIdBytes = u64ToLeBytes(roundId)
       const { value: latestBlockhash, context } = await client.rpc.getLatestBlockhash().send()
       const minContextSlot = BigInt(context.slot)

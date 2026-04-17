@@ -17,8 +17,8 @@ export function useRewardzClient(): RewardzClient | null {
     if (!publicKey || !signMessage) return null
     const adapter = createWalletAdapter(publicKey, (msg: Uint8Array) => signMessage(msg) as Promise<Uint8Array>)
     return new RewardzClient({
-      rpcUrl: ENV.RPC_URL,
-      apiBaseUrl: ENV.INTENT_API_BASE_URL,
+      rpcUrl: ENV.SOLANA_RPC_URL,
+      apiBaseUrl: ENV.API_BASE_URL,
       wallet: adapter,
     })
   }, [publicKey, signMessage])

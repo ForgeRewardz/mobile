@@ -16,7 +16,7 @@ const utf8 = getUtf8Encoder()
 const addressEncoder = getAddressEncoder()
 
 function programAddress() {
-  return address(ENV.REWARDZ_PROGRAM_ID)
+  return address(ENV.PROGRAM_ID)
 }
 
 export function u64ToLeBytes(value: bigint | number | string): Uint8Array {
