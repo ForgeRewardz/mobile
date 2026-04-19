@@ -7,10 +7,12 @@ interface AppState {
   isOnboarded: boolean
   isUnlocked: boolean
   onboardingStep: number
+  referralCode: string | null
   setHasHydrated: (value: boolean) => void
   setOnboarded: (value: boolean) => void
   setUnlocked: (value: boolean) => void
   setOnboardingStep: (step: number) => void
+  setReferralCode: (code: string | null) => void
   reset: () => void
 }
 
@@ -21,11 +23,13 @@ export const useAppStore = create<AppState>()(
       isOnboarded: false,
       isUnlocked: false,
       onboardingStep: 0,
+      referralCode: null,
       setHasHydrated: (value) => set({ _hasHydrated: value }),
       setOnboarded: (value) => set({ isOnboarded: value }),
       setUnlocked: (value) => set({ isUnlocked: value }),
       setOnboardingStep: (step) => set({ onboardingStep: step }),
-      reset: () => set({ isOnboarded: false, isUnlocked: false, onboardingStep: 0 }),
+      setReferralCode: (code) => set({ referralCode: code }),
+      reset: () => set({ isOnboarded: false, isUnlocked: false, onboardingStep: 0, referralCode: null }),
     }),
     {
       name: 'rewardz-app-state',
@@ -37,6 +41,7 @@ export const useAppStore = create<AppState>()(
         isOnboarded: state.isOnboarded,
         isUnlocked: state.isUnlocked,
         onboardingStep: state.onboardingStep,
+        referralCode: state.referralCode,
       }),
     },
   ),

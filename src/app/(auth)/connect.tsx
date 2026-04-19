@@ -1,9 +1,10 @@
 import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useWallet } from '@/hooks/useWallet'
-import { useWalletStore } from '@/store'
+import { useWalletStore, useAppStore } from '@/store'
 import { SafeScreen } from '@/components/layout/SafeScreen'
 import { colors, typography, radii } from '@/theme/tokens'
+import { attributeReferral, isValidReferralCode } from '@/features/referral'
 
 export default function ConnectScreen() {
   const router = useRouter()
@@ -12,7 +13,15 @@ export default function ConnectScreen() {
 
   const handleConnect = async () => {
     try {
-      await connect()
+      const account = await connect()
+
+      // Fire-and-forget referral attribution — never blocks wallet flow
+      const referralCode = useAppStore.getState().referralCode
+      if (isValidReferralCode(referralCode)) {
+        attributeReferral(account.address, referralCode).catch(console.error)
+        useAppStore.getState().setReferralCode(null)
+      }
+
       router.push('/(auth)/unlock')
     } catch {
       // error is set in the store by useWallet

@@ -42,7 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     SOLANA_NETWORK: process.env.SOLANA_NETWORK || 'devnet',
     SOLANA_RPC_URL: process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com',
-    PROGRAM_ID: process.env.PROGRAM_ID || 'mineHEHyaVbQAkcPDDCuCSbkfGNid1RVz6GzcEgSVTh',
+    PROGRAM_ID: process.env.PROGRAM_ID || 'rwdzuEW5UsQ5RM53LAqTBaJWirR14HdH19GnTgvKo7C',
     TOKEN_X_MINT: process.env.TOKEN_X_MINT || '',
     API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:3001',
     BLINK_CLIENT_KEY: process.env.BLINK_CLIENT_KEY || '',

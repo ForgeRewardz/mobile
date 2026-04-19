@@ -6,7 +6,7 @@ import { SafeScreen } from '@/components/layout/SafeScreen'
 import { TopAppBar } from '@/components/navigation/TopAppBar'
 import { SearchBar } from '@/components/navigation/SearchBar'
 import { QuickActionChips } from '@/components/inputs'
-import { MissionCard, TrustBadge } from '@/components/cards'
+import { FeaturedBadge, MissionCard, TrustBadge } from '@/components/cards'
 import type { QuestType } from '@/components/cards'
 import { EmptyStateBlock, LoadingSkeleton } from '@/components/feedback'
 
@@ -29,6 +29,8 @@ interface ProtocolSummary {
   icon?: string
   trustScore: number
   supportedActions: string[]
+  muted: boolean
+  isFeatured: boolean
 }
 
 /**
@@ -48,10 +50,11 @@ function mapActionTypeToQuestType(actionType: string): QuestType {
  * strongest signal rather than an arbitrary one.
  */
 function buildProtocolCatalog(offers: IntentOffer[]): ProtocolSummary[] {
-  const byName = new Map<string, ProtocolSummary>()
+  const byName = new Map<string, ProtocolSummary & { _allAtRisk: boolean }>()
   for (const offer of offers) {
     const existing = byName.get(offer.protocolName)
     const actionLabel = humanizeActionType(offer.actionType)
+    const isAtRisk = offer.visibility === 'at_risk'
     if (existing) {
       if (!existing.supportedActions.includes(actionLabel)) {
         existing.supportedActions.push(actionLabel)
@@ -62,6 +65,12 @@ function buildProtocolCatalog(offers: IntentOffer[]): ProtocolSummary[] {
       if (!existing.icon && offer.protocolIcon) {
         existing.icon = offer.protocolIcon
       }
+      if (!isAtRisk) {
+        existing._allAtRisk = false
+      }
+      if (offer.isFeatured) {
+        existing.isFeatured = true
+      }
     } else {
       byName.set(offer.protocolName, {
         id: offer.protocolName,
@@ -69,10 +78,16 @@ function buildProtocolCatalog(offers: IntentOffer[]): ProtocolSummary[] {
         icon: offer.protocolIcon,
         trustScore: offer.trustScore ?? DEFAULT_TRUST_SCORE,
         supportedActions: [actionLabel],
+        muted: false,
+        isFeatured: offer.isFeatured ?? false,
+        _allAtRisk: isAtRisk,
       })
     }
   }
-  return Array.from(byName.values())
+  return Array.from(byName.values()).map(({ _allAtRisk, ...proto }) => ({
+    ...proto,
+    muted: _allAtRisk,
+  }))
 }
 
 /**
@@ -106,6 +121,7 @@ export default function ExploreScreen() {
   const visibleOffers = useMemo<IntentOffer[]>(() => {
     const normalizedQuery = query.trim().toLowerCase()
     return allOffers.filter((offer) => {
+      if (offer.visibility === 'hidden') return false
       const matchesAction = selectedAction ? humanizeActionType(offer.actionType) === selectedAction : true
       const matchesQuery =
         normalizedQuery.length === 0
@@ -293,7 +309,7 @@ function ProtocolCard({ protocol, onPress }: ProtocolCardProps) {
         borderRadius: radii['2xl'],
         padding: spacing.base,
         gap: spacing.md,
-        opacity: pressed ? 0.85 : 1,
+        opacity: protocol.muted ? 0.5 : pressed ? 0.85 : 1,
       })}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
@@ -320,17 +336,21 @@ function ProtocolCard({ protocol, onPress }: ProtocolCardProps) {
         </View>
 
         <View style={{ flex: 1, gap: 2 }}>
-          <Text
-            style={{
-              color: colors.onSurface,
-              fontFamily: typography.headlineSmall,
-              fontSize: 15,
-              lineHeight: 20,
-            }}
-            numberOfLines={1}
-          >
-            {protocol.name}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Text
+              style={{
+                color: colors.onSurface,
+                fontFamily: typography.headlineSmall,
+                fontSize: 15,
+                lineHeight: 20,
+                flexShrink: 1,
+              }}
+              numberOfLines={1}
+            >
+              {protocol.name}
+            </Text>
+            {protocol.isFeatured && <FeaturedBadge />}
+          </View>
           <TrustBadge score={protocol.trustScore} />
         </View>
       </View>

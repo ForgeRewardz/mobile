@@ -22,6 +22,8 @@ export interface IntentOffer {
   eligibility: 'eligible' | 'ineligible' | 'unknown'
   trustScore?: number
   rank: number
+  visibility?: 'visible' | 'hidden' | 'at_risk'
+  isFeatured?: boolean
 }
 
 export type CompletionStatus =

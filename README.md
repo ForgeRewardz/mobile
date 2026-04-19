@@ -97,7 +97,7 @@ See `.env.example` for all required variables. Key ones:
 - `/(tabs)/rewards/mining` shows the active 1-minute round, total player count, caller deployment state, and result reveal.
 - `use-game-round` and `use-round-result` read `/v1/game/round/*` API routes. Other players' deployed points are not displayed.
 - `use-deploy-to-round` builds the `deployToRound` instruction with `@rewardz/sdk/generated`, compiles the transaction with `@solana/kit`, and signs through Mobile Wallet Adapter.
-- The default program fallback is `mineHEHyaVbQAkcPDDCuCSbkfGNid1RVz6GzcEgSVTh`; override `REWARDZ_PROGRAM_ID` per environment when deployed.
+- The default program fallback is `rwdzuEW5UsQ5RM53LAqTBaJWirR14HdH19GnTgvKo7C`; override `REWARDZ_PROGRAM_ID` per environment when deployed.
 
 ## Distribution
 

@@ -7,6 +7,12 @@ interface UseFeaturedOffersOptions {
   limit?: number
 }
 
+function parseVisibility(raw: unknown): IntentOffer['visibility'] {
+  if (raw === 'hidden') return 'hidden'
+  if (raw === 'at_risk') return 'at_risk'
+  return 'visible'
+}
+
 /**
  * Fetches featured/trending offers from @rewardz/sdk.
  *
@@ -26,21 +32,25 @@ export function useFeaturedOffers(options: UseFeaturedOffersOptions = {}): UseQu
       const response = await client.browseOffers(filters)
       // SDK shape: OffersBrowseResponse { offers: OfferRow[] }
       const rawOffers = response.offers ?? []
-      return rawOffers.map(
-        (o, idx): IntentOffer => ({
-          id: o.campaign_id,
-          protocolName: o.protocol_name,
-          actionType: o.action_type,
-          title: o.name,
-          description: o.description ?? '',
-          iconUrl: '', // OfferRow does not include icon URL — empty for now
-          actionUrl: '', // Action URL is looked up from protocol manifest, not offer row
-          rewardPoints: o.points_per_completion,
-          eligibility: 'unknown',
-          trustScore: o.trust_score,
-          rank: o.rank ?? idx,
-        }),
-      )
+      return rawOffers
+        .map(
+          (o, idx): IntentOffer => ({
+            id: o.campaign_id,
+            protocolName: o.protocol_name,
+            actionType: o.action_type,
+            title: o.name,
+            description: o.description ?? '',
+            iconUrl: '', // OfferRow does not include icon URL — empty for now
+            actionUrl: '', // Action URL is looked up from protocol manifest, not offer row
+            rewardPoints: o.points_per_completion,
+            eligibility: 'unknown',
+            trustScore: o.trust_score,
+            rank: o.rank ?? idx,
+            visibility: parseVisibility((o as unknown as Record<string, unknown>).visibility),
+            isFeatured: Boolean((o as unknown as Record<string, unknown>).is_featured),
+          }),
+        )
+        .filter((offer) => offer.visibility !== 'hidden')
     },
     enabled: !!client,
     staleTime: 5 * 60_000,

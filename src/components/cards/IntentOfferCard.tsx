@@ -1,17 +1,7 @@
 import { View, Text, Pressable } from 'react-native'
 import { colors, fonts, radii } from '@/theme/tokens'
+import type { IntentOffer } from '@/types/api'
 import { TrustBadge } from './TrustBadge'
-
-interface IntentOffer {
-  id: string
-  protocolName: string
-  iconUrl?: string
-  actionType: string
-  title: string
-  rewardPoints: number
-  rank: number
-  eligibility: 'eligible' | 'ineligible' | 'unknown'
-}
 
 interface IntentOfferCardProps {
   offer: IntentOffer
@@ -21,6 +11,7 @@ interface IntentOfferCardProps {
 
 export function IntentOfferCard({ offer, onPress, onRunAction }: IntentOfferCardProps) {
   const rewardPointsLabel = `${offer.rewardPoints.toLocaleString('en-US')} points`
+  const isMuted = offer.visibility === 'at_risk'
   return (
     <Pressable
       onPress={onPress}
@@ -30,7 +21,7 @@ export function IntentOfferCard({ offer, onPress, onRunAction }: IntentOfferCard
         backgroundColor: colors.surfaceContainerLow,
         borderRadius: radii['2xl'],
         padding: 16,
-        opacity: pressed ? 0.85 : 1,
+        opacity: isMuted ? 0.5 : pressed ? 0.85 : 1,
       })}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
